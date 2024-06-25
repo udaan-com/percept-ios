@@ -11,4 +11,10 @@
  5. Write a description of the release.
  6. Publish the release.
  7. Publish Cocoapods
+    1. pod lib lint Percept.podspec
+    2. https://guides.cocoapods.org/making/getting-setup-with-trunk.html
+        a) pod trunk register your.email@example.com 'Your Name' --description='Personal Laptop' // first time publish
+        b) ask someone to add you as a maintainer
+    3. pod trunk push Percept.podspec
+
  8. Done.
