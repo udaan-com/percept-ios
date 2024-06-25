@@ -23,7 +23,7 @@ struct PerceptApi {
     }
     
     func sendEvents(events: [PerceptEvent], completion: @escaping (_ success: Bool) -> Void) {
-        var payload = EventPayload(events: events)
+        let payload = EventPayload(events: events)
         
         let headers: HTTPHeaders = [
           "Authorization": "Bearer \(token)",
@@ -46,7 +46,7 @@ struct PerceptApi {
     }
     
     func setUserData(userData: UserInfo, completion: @escaping (_ success: Bool) -> Void) {
-        var payload = userData
+        let payload = userData
         
         let headers: HTTPHeaders = [
           "Authorization": "Bearer \(token)",

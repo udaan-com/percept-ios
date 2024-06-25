@@ -39,8 +39,6 @@ public final class Percept: NSObject {
     private var uniqueId: String?;
     private var userId: String?;
     
-    private var piSdkVersion = "0.0.1"
-    
     private var dispatchQueue = DispatchQueue(label: "com.percept.userQueue", target: .global(qos: .utility))
     
 //    private var instance: PerceptSDK?;
@@ -442,8 +440,8 @@ public final class Percept: NSObject {
             deviceInfo?["pi_os_name"] = device.systemName
             deviceInfo?["pi_os_version"] = device.systemVersion
             
-            deviceInfo?["pi_sdk_type"] = "iOS";
-            deviceInfo?["pi_sdk_version"] = piSdkVersion;
+            deviceInfo?["pi_sdk_type"] = perceptSdkName;
+            deviceInfo?["pi_sdk_version"] = perceptSdkVersion;
         #elseif os(macOS)
             let deviceName = Host.current().localizedName
             if (deviceName?.isEmpty) != nil {
