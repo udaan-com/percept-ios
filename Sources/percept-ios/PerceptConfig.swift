@@ -16,7 +16,7 @@ public struct PerceptConfig {
     public var captureAppLifecycleEvents = true
     public var debug = true
     
-    init(apiKey: String) {
+    public init(apiKey: String) {
         self.apiKey = apiKey;
     }
 }
