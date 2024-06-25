@@ -98,7 +98,7 @@ public final class Percept: NSObject {
         eventQueue?.start()
     }
     
-    public func setUserId(forUser userId: String, withPerceptUserProps userProps: [PerceptUserProperty:String]? = [:], additionalProps: [String: String]? = [:]) {
+    public func setUserId(_ userId: String, withPerceptUserProps userProps: [PerceptUserProperty:String]? = [:], additionalProps: [String: String]? = [:]) {
         if !isEnabled(){
             return;
         }
@@ -153,6 +153,14 @@ public final class Percept: NSObject {
         }
     }
     
+    public func removeGlobalProperty(_ key: String) {
+        propsLock.withLock {
+            var existingGlobalProps = getGlobalProperties();
+            existingGlobalProps.removeValue(forKey: key);
+            storage?.setDictionary(forKey: PerceptStorageKeys.globalProperties, data: existingGlobalProps)
+        }
+    }
+    
     public func capture(_ eventName: String) {
         capture(eventName, properties: nil);
     }
@@ -196,6 +204,37 @@ public final class Percept: NSObject {
         eventQueue?.clear()
         self.userId = nil
         initUniqueid()
+    }
+    
+    public func flush() {
+        if !isEnabled() {
+            return
+        }
+
+        eventQueue?.flush()
+    }
+    
+    public func close() {
+        if !isEnabled() {
+            return
+        }
+
+        setupLock.withLock {
+            enabled = false
+            eventQueue?.stop()
+            eventQueue = nil
+            config = PerceptConfig(apiKey: "")
+            api = nil
+            storage = nil
+            #if !os(watchOS)
+                self.reachability?.stopNotifier()
+                reachability = nil
+            #endif
+            removeAppStateListeners()
+            capturedAppInstalled = false
+            isInBackground = false
+            toogleLogging(false)
+        }
     }
     
     private func getUserPropsToSend(userProps: [PerceptUserProperty:String]? = [:], additionalProps: [String: String]? = [:]) -> [String:String] {
@@ -243,6 +282,20 @@ public final class Percept: NSObject {
         return isInitialised;
     }
     
+    private func removeAppStateListeners() {
+        let defaultCenter = NotificationCenter.default
+
+        #if os(iOS) || os(tvOS)
+            defaultCenter.removeObserver(self, name: UIApplication.didFinishLaunchingNotification, object: nil)
+            defaultCenter.removeObserver(self, name: UIApplication.didEnterBackgroundNotification, object: nil)
+            defaultCenter.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
+        #elseif os(macOS)
+            defaultCenter.removeObserver(self, name: NSApplication.didFinishLaunchingNotification, object: nil)
+            defaultCenter.removeObserver(self, name: NSApplication.didResignActiveNotification, object: nil)
+            defaultCenter.removeObserver(self, name: NSApplication.didBecomeActiveNotification, object: nil)
+        #endif
+    }
+    
     private func addAppStateListeners() {
         let defaultCenter = NotificationCenter.default
         
@@ -260,18 +313,18 @@ public final class Percept: NSObject {
                                     name: UIApplication.didBecomeActiveNotification,
                                     object: nil)
         #elseif os(macOS)
-                    defaultCenter.addObserver(self,
-                                              selector: #selector(handleAppDidFinishLaunching),
-                                              name: NSApplication.didFinishLaunchingNotification,
-                                              object: nil)
-                    defaultCenter.addObserver(self,
-                                              selector: #selector(handleAppDidEnterBackground),
-                                              name: NSApplication.didResignActiveNotification,
-                                              object: nil)
-                    defaultCenter.addObserver(self,
-                                              selector: #selector(handleAppDidBecomeActive),
-                                              name: NSApplication.didBecomeActiveNotification,
-                                              object: nil)
+        defaultCenter.addObserver(self,
+                                  selector: #selector(handleAppDidFinishLaunching),
+                                  name: NSApplication.didFinishLaunchingNotification,
+                                  object: nil)
+        defaultCenter.addObserver(self,
+                                  selector: #selector(handleAppDidEnterBackground),
+                                  name: NSApplication.didResignActiveNotification,
+                                  object: nil)
+        defaultCenter.addObserver(self,
+                                  selector: #selector(handleAppDidBecomeActive),
+                                  name: NSApplication.didBecomeActiveNotification,
+                                  object: nil)
         #endif
       }
     
