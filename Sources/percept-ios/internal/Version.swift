@@ -7,6 +7,6 @@
 
 import Foundation
 
-public var perceptSdkVersion = "1.0.1"
+public var perceptSdkVersion = "1.0.2"
 
 public var perceptSdkName = "iOS"

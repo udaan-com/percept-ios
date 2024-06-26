@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'Percept'
-  s.version          = '1.0.1'
+  s.version          = '1.0.2'
   s.summary          = 'Effortlessly integrate Percept into your iOS app.'
 
   s.homepage         = 'https://perceptinsight.com'
