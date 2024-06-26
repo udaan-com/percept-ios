@@ -7,15 +7,15 @@
 
 import Foundation
 
-var isLoggingEnabled = false;
+var isLoggingEnabled = false
 
 func toogleLogging(_ enabled: Bool) {
-    isLoggingEnabled = enabled;
+    isLoggingEnabled = enabled
 }
 
 func perceptLog(_ message: String) {
     if !isLoggingEnabled {
-        return;
+        return
     }
-    print("[PI] \(message)");
+    print("[PI] \(message)")
 }

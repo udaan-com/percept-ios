@@ -14,4 +14,5 @@ Pod::Spec.new do |s|
 
   s.source_files = 'Sources/percept-ios/**/*'
   s.dependency 'Alamofire', '~> 5.0'
+  s.exclude_files = [ 'scripts/*']
 end

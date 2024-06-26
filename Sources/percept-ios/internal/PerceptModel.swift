@@ -8,7 +8,7 @@
 import Foundation
 
 struct PerceptEventConsumerPayload {
-    let events: [PerceptEvent];
+    let events: [PerceptEvent]
     let completion: (Bool) -> Void
 }
 
@@ -16,7 +16,7 @@ struct PerceptEvent: Codable {
     var name: String
     var data: [String: String] = [:]
     var multiData: [String: [String]] = [:]
-    
+
     // Optional initializer for decoding from JSON
 //    init(from decoder: Decoder) throws {
 //        let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -24,14 +24,14 @@ struct PerceptEvent: Codable {
 //        data = try container.decodeIfPresent([String: String].self, forKey: .data) ?? [:]
 //        multiData = try container.decodeIfPresent([String: [String]].self, forKey: .multiData) ?? [:]
 //    }
-    
+
     func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self);
+        var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(name, forKey: .name)
         try container.encode(data, forKey: .data)
         try container.encode(multiData, forKey: .multiData)
     }
-    
+
     private enum CodingKeys: String, CodingKey {
         case name = "name"
         case data = "data"
@@ -43,12 +43,11 @@ struct EventPayload: Codable {
     var events: [PerceptEvent]
 }
 
-
 struct UserInfo: Codable {
-    var userId: String;
+    var userId: String
     var data: [String: String] = [:]
     var multiData: [String: [String]] = [:]
-    
+
     // Optional initializer for decoding from JSON
 //    init(from decoder: Decoder) throws {
 //        let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -56,14 +55,14 @@ struct UserInfo: Codable {
 //        data = try container.decodeIfPresent([String: String].self, forKey: .data) ?? [:]
 //        multiData = try container.decodeIfPresent([String: [String]].self, forKey: .multiData) ?? [:]
 //      }
-    
+
     func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self);
+        var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(userId, forKey: .userId)
         try container.encode(data, forKey: .data)
         try container.encode(multiData, forKey: .multiData)
     }
-    
+
     private enum CodingKeys: String, CodingKey {
         case userId = "userId"
         case data = "data"

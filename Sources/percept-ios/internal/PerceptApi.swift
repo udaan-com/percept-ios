@@ -10,26 +10,26 @@ import Foundation
 import Alamofire
 
 struct PerceptApiResponse: Decodable {
-    var responseHTTPCode: Int;
+    var responseHTTPCode: Int
 }
 
 struct PerceptApi {
-    private let eventEndpoint = "https://app.perceptinsight.com/track/v1/event";
-    private let userEndpoint = "https://app.perceptinsight.com/track/v1/user";
-    private let token: String;
-    
+    private let eventEndpoint = "https://app.perceptinsight.com/track/v1/event"
+    private let userEndpoint = "https://app.perceptinsight.com/track/v1/user"
+    private let token: String
+
     init(_ apiKey: String) {
-        token = apiKey;
+        token = apiKey
     }
-    
+
     func sendEvents(events: [PerceptEvent], completion: @escaping (_ success: Bool) -> Void) {
         let payload = EventPayload(events: events)
-        
+
         let headers: HTTPHeaders = [
           "Authorization": "Bearer \(token)",
           "Content-Type": "application/json; charset=UTF-8"
         ]
-        
+
         AF.request(eventEndpoint, method: .post, parameters: payload, encoder: JSONParameterEncoder.default, headers: headers)
             .validate()
             .responseData { response in
@@ -42,10 +42,10 @@ struct PerceptApi {
                 }
             }
     }
-    
+
     func setUserData(userData: UserInfo, completion: @escaping (_ success: Bool) -> Void) {
         let payload = userData
-        
+
         let headers: HTTPHeaders = [
           "Authorization": "Bearer \(token)",
           "Content-Type": "application/json; charset=UTF-8"
@@ -62,6 +62,6 @@ struct PerceptApi {
                     print("Error capturing user: \(error)")
                 }
             }
-        
+
     }
 }

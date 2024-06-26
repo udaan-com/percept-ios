@@ -28,7 +28,6 @@ class PersistentEventQueue {
           perceptLog("Error trying to create caching folder \(error)")
       }
 
-
       do {
           fileNames = try FileManager.default.contentsOfDirectory(atPath: storageDirectory.path)
           fileNames.sort { Double($0)! < Double($1)! }
@@ -68,7 +67,7 @@ class PersistentEventQueue {
 
   private func loadEvents(count: Int) -> [Data] {
       var loadedEvents = [Data]()
-      
+
       for fileName in fileNames.prefix(count) {
           let fileURL = storageDirectory.appendingPathComponent(fileName)
           do {

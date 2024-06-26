@@ -8,10 +8,10 @@
 import Foundation
 
 enum PerceptStorageKeys: String {
-    case uniqueId = "pi.uniqueId";
-    case userId = "pi.userId";
-    case globalProperties = "pi.globalProperties";
-    case eventQueue = "pi.eventQueue";
+    case uniqueId = "pi.uniqueId"
+    case userId = "pi.userId"
+    case globalProperties = "pi.globalProperties"
+    case eventQueue = "pi.eventQueue"
 }
 
 func applicationSupportDirectoryURL() -> URL {
@@ -20,36 +20,36 @@ func applicationSupportDirectoryURL() -> URL {
 }
 
 class PerceptStorage {
-    
-    private let config: PerceptConfig;
-    private let appStorageUrl: URL;
-    
+
+    private let config: PerceptConfig
+    private let appStorageUrl: URL
+
     init(_ config: PerceptConfig) {
-        self.config = config;
-        appStorageUrl = applicationSupportDirectoryURL();
-        createDirectoryAtURLIfNeeded(url: appStorageUrl);
+        self.config = config
+        appStorageUrl = applicationSupportDirectoryURL()
+        createDirectoryAtURLIfNeeded(url: appStorageUrl)
     }
-    
+
     public func getUrl(forKey key: PerceptStorageKeys) -> URL {
         appStorageUrl.appendingPathComponent(key.rawValue)
     }
-    
+
     public func setString(forKey key: PerceptStorageKeys, value: String) {
         let jsonObject = [key.rawValue: value]
         var data: Data?
-        
+
         do {
             data = try JSONSerialization.data(withJSONObject: jsonObject)
         } catch {
             perceptLog("Failed to serialize key '\(key)' error: \(error)")
         }
-        
-        setData(forKey: key, data: data);
+
+        setData(forKey: key, data: data)
     }
-    
+
     public func getString(forKey key: PerceptStorageKeys) -> String? {
         let value = getJson(forKey: key)
-        
+
         if let stringValue = value as? String {
             return stringValue
         } else if let dictValue = value as? [String: String] {
@@ -57,7 +57,7 @@ class PerceptStorage {
         }
         return nil
     }
-    
+
     public func getDictionary(forKey key: PerceptStorageKeys) -> [String: String]? {
             getJson(forKey: key) as? [String: String]
         }
@@ -65,14 +65,14 @@ class PerceptStorage {
     public func setDictionary(forKey key: PerceptStorageKeys, data: [String: String]) {
         setJson(forKey: key, json: data)
     }
-    
+
     public func reset() {
         // event queue will cleared by its clear handler
         delete(getUrl(forKey: PerceptStorageKeys.userId))
         delete(getUrl(forKey: PerceptStorageKeys.uniqueId))
         delete(getUrl(forKey: PerceptStorageKeys.globalProperties))
     }
-    
+
     public func getBool(forKey key: PerceptStorageKeys) -> Bool? {
         let value = getJson(forKey: key)
         if let boolValue = value as? Bool {
@@ -86,16 +86,16 @@ class PerceptStorage {
     public func setBool(forKey key: PerceptStorageKeys, data: Bool) {
         setJson(forKey: key, json: data)
     }
-    
+
     private func setData(forKey key: PerceptStorageKeys, data: Data?) {
-        var url = getUrl(forKey: key);
-        
+        var url = getUrl(forKey: key)
+
         do {
             if data == nil {
-                delete(url);
-                return;
+                delete(url)
+                return
             }
-            try data?.write(to: url);
+            try data?.write(to: url)
             var resourceValues = URLResourceValues()
             resourceValues.isExcludedFromBackup = true
             try url.setResourceValues(resourceValues)
@@ -103,7 +103,7 @@ class PerceptStorage {
             perceptLog("Storage write failed for key '\(key)' with error: \(error)")
         }
     }
-    
+
     private func getData(forKey: PerceptStorageKeys) -> Data? {
         let url = getUrl(forKey: forKey)
 
@@ -116,7 +116,7 @@ class PerceptStorage {
         }
         return nil
     }
-    
+
     private func setJson(forKey key: PerceptStorageKeys, json: Any) {
         var jsonObject: Any?
 
@@ -137,7 +137,7 @@ class PerceptStorage {
         }
         setData(forKey: key, data: data)
     }
-    
+
     private func getJson(forKey key: PerceptStorageKeys) -> Any? {
         guard let data = getData(forKey: key) else { return nil }
 
@@ -148,7 +148,7 @@ class PerceptStorage {
         }
         return nil
     }
-    
+
     private func createDirectoryAtURLIfNeeded(url: URL) {
             if FileManager.default.fileExists(atPath: url.path) { return }
             do {
@@ -157,7 +157,7 @@ class PerceptStorage {
                 perceptLog("Storage directory creation failed \(error)")
             }
     }
-    
+
     private func delete(_ file: URL) {
         if FileManager.default.fileExists(atPath: file.path) {
             do {

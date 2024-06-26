@@ -15,8 +15,8 @@ public struct PerceptConfig {
     public var flushIntervalSeconds: Double = 20
     public var captureAppLifecycleEvents = true
     public var debug = true
-    
+
     public init(apiKey: String) {
-        self.apiKey = apiKey;
+        self.apiKey = apiKey
     }
 }

@@ -7,7 +7,6 @@
 
 import Foundation
 
-
 class PerceptEventQueue {
     private let config: PerceptConfig
     private let storage: PerceptStorage
@@ -24,24 +23,24 @@ class PerceptEventQueue {
     private let retryDelay = 5.0
     private let maxRetryDelay = 30.0
     private let reachability: Reachability?
-    
+
     private let api: PerceptApi
-    
+
     var count: Int {
         persistentQueue.count
     }
-    
+
     init(_ config: PerceptConfig, _ storage: PerceptStorage, _ reachability: Reachability?) {
         self.config = config
         self.storage = storage
         self.reachability = reachability
-        
+
         self.api = PerceptApi(config.apiKey)
 
         persistentQueue = PersistentEventQueue(storageDirectory: storage.getUrl(forKey: PerceptStorageKeys.eventQueue))
         dispatchQueue = DispatchQueue(label: "com.percept.eventQueue", target: .global(qos: .utility))
     }
-    
+
     func clear() {
         persistentQueue.clear()
     }
@@ -68,7 +67,7 @@ class PerceptEventQueue {
             }
         }
     }
-    
+
     func start() {
         reachability?.whenUnreachable = { _ in
            self.pausedLock.withLock {
@@ -76,13 +75,13 @@ class PerceptEventQueue {
                self.paused = true
            }
        }
-        
+
         do {
             try reachability?.startNotifier()
         } catch {
             perceptLog("Error: Unable to monitor network reachability: \(error)")
         }
-        
+
         timerLock.withLock {
             timer = Timer.scheduledTimer(withTimeInterval: config.flushIntervalSeconds, repeats: true, block: { _ in
                 perceptLog("Inside timer: \(self.isFlushing)")
@@ -93,7 +92,7 @@ class PerceptEventQueue {
             })
         }
     }
-    
+
     func add(_ event: PerceptEvent) {
         if persistentQueue.count >= config.maxQueueSize {
             perceptLog("Queue is full, dropping oldest event")
@@ -112,7 +111,7 @@ class PerceptEventQueue {
         perceptLog("Queued event '\(event.name)'. Depth: \(persistentQueue.count)")
         flushIfOverThreshold()
     }
-    
+
     private func process(_ count: Int, completion: @escaping (PerceptEventConsumerPayload) -> Void) {
         dispatchQueue.async {
             self.isFlushingLock.withLock {
@@ -126,7 +125,7 @@ class PerceptEventQueue {
 
             var eventsToSend = [PerceptEvent]()
             let decoder = JSONDecoder()
-            
+
             for item in items {
                 guard let event = try? decoder.decode(PerceptEvent.self, from: item) else {
                     continue
@@ -145,15 +144,15 @@ class PerceptEventQueue {
             })
         }
     }
-    
+
     private func sendBatchedEvents(_ payload: PerceptEventConsumerPayload) {
         perceptLog("Sending batch of \(payload.events.count) events to Percept")
-        
+
         api.sendEvents(events: payload.events) { success in
             self.handleResult(success, payload)
         }
     }
-    
+
     private func handleResult(_ success: Bool, _ payload: PerceptEventConsumerPayload) {
 
         let shouldRetry = !success
@@ -170,17 +169,16 @@ class PerceptEventQueue {
         payload.completion(!shouldRetry)
     }
 
-    
     private func flushIfOverThreshold() {
         if persistentQueue.count >= config.flushAt {
             flush()
         }
     }
-    
+
     private func pauseFor(seconds: TimeInterval) {
             pausedUntil = Date().addingTimeInterval(seconds)
     }
-    
+
     private func canFlush() -> Bool {
         if isFlushing {
             return false
@@ -196,5 +194,5 @@ class PerceptEventQueue {
 
         return true
     }
-    
+
 }
