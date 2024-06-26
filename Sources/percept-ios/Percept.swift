@@ -120,7 +120,7 @@ public final class Percept: NSObject {
         dispatchQueue.async {
             self.api?.setUserData(userData: userInfo) { success in
                 if !success {
-                    perceptLog("Setting user property call failed");
+                    perceptLog("Set user property call failed");
                 }
             }
         }

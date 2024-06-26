@@ -244,7 +244,6 @@ class PerceptEventQueue {
             completion(PerceptEventConsumerPayload(events: eventsToSend) { success in
                 if success, items.count > 0 {
                     self.fileQueue.pop(items.count)
-                    perceptLog("Completed!")
                 }
 
                 self.isFlushingLock.withLock {

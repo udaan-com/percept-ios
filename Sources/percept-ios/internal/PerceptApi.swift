@@ -29,8 +29,6 @@ struct PerceptApi {
           "Authorization": "Bearer \(token)",
           "Content-Type": "application/json; charset=UTF-8"
         ]
-        perceptLog("Sending events to percept")
-        print(payload)
         
         AF.request(eventEndpoint, method: .post, parameters: payload, encoder: JSONParameterEncoder.default, headers: headers)
             .validate()
