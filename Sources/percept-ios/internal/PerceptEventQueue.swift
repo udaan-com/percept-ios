@@ -7,113 +7,6 @@
 
 import Foundation
 
-class FileBackedQueue {
-    let queue: URL
-    
-    private var items = [String]()
-    
-    var depth: Int {
-        items.count
-    }
-
-    init(queue: URL) {
-        self.queue = queue
-        setup()
-    }
-    
-    private func setup() {
-        do {
-            try FileManager.default.createDirectory(atPath: queue.path, withIntermediateDirectories: true)
-        } catch {
-            perceptLog("Error trying to create caching folder \(error)")
-        }
-
-
-        do {
-            items = try FileManager.default.contentsOfDirectory(atPath: queue.path)
-            items.sort { Double($0)! < Double($1)! }
-        } catch {
-            perceptLog("Failed to load files for event queue \(error)")
-        }
-    }
-    
-    func getFiles(_ count: Int) -> [Data] {
-        loadFiles(count)
-    }
-
-    func delete(index: Int) {
-        if items.isEmpty { return }
-        let removed = items.remove(at: index)
-
-        deleteSafely(queue.appendingPathComponent(removed))
-    }
-
-    func pop(_ count: Int) {
-        deleteFiles(count)
-    }
-
-    func add(_ contents: Data) {
-        do {
-            let filename = "\(Date().timeIntervalSince1970)"
-            try contents.write(to: queue.appendingPathComponent(filename))
-            items.append(filename)
-        } catch {
-            perceptLog("Could not write file \(error)")
-        }
-    }
-
-    func clear() {
-        deleteSafely(queue)
-        setup()
-    }
-    
-    private func loadFiles(_ count: Int) -> [Data] {
-        var results = [Data]()
-
-        for item in items {
-            let itemURL = queue.appendingPathComponent(item)
-            do {
-                if !FileManager.default.fileExists(atPath: itemURL.path) {
-                    perceptLog("File \(itemURL) does not exist")
-                    continue
-                }
-                let contents = try Data(contentsOf: itemURL)
-
-                results.append(contents)
-            } catch {
-                perceptLog("File \(itemURL) is corrupted \(error)")
-
-                deleteSafely(itemURL)
-            }
-
-            if results.count == count {
-                return results
-            }
-        }
-
-        return results
-    }
-    
-    private func deleteFiles(_ count: Int) {
-        for _ in 0 ..< count {
-            if items.isEmpty { return }
-            let removed = items.remove(at: 0)
-
-            deleteSafely(queue.appendingPathComponent(removed))
-        }
-    }
-    
-    private func deleteSafely(_ file: URL) {
-        if FileManager.default.fileExists(atPath: file.path) {
-            do {
-                try FileManager.default.removeItem(at: file)
-            } catch {
-                perceptLog("Failed to delete file at \(file.path) with error: \(error)")
-            }
-        }
-    }
-    
-}
 
 class PerceptEventQueue {
     private let config: PerceptConfig
@@ -126,7 +19,7 @@ class PerceptEventQueue {
     private let isFlushingLock = NSLock()
     private var timer: Timer?
     private let timerLock = NSLock()
-    private let fileQueue: FileBackedQueue
+    private let persistentQueue: PersistentEventQueue
     private let dispatchQueue: DispatchQueue
     private let retryDelay = 5.0
     private let maxRetryDelay = 30.0
@@ -134,8 +27,8 @@ class PerceptEventQueue {
     
     private let api: PerceptApi
     
-    var depth: Int {
-            fileQueue.depth
+    var count: Int {
+        persistentQueue.count
     }
     
     init(_ config: PerceptConfig, _ storage: PerceptStorage, _ reachability: Reachability?) {
@@ -145,12 +38,12 @@ class PerceptEventQueue {
         
         self.api = PerceptApi(config.apiKey)
 
-        fileQueue = FileBackedQueue(queue: storage.getUrl(forKey: PerceptStorageKeys.eventQueue))
+        persistentQueue = PersistentEventQueue(storageDirectory: storage.getUrl(forKey: PerceptStorageKeys.eventQueue))
         dispatchQueue = DispatchQueue(label: "com.percept.eventQueue", target: .global(qos: .utility))
     }
     
     func clear() {
-        fileQueue.clear()
+        persistentQueue.clear()
     }
 
     func stop() {
@@ -202,9 +95,9 @@ class PerceptEventQueue {
     }
     
     func add(_ event: PerceptEvent) {
-        if fileQueue.depth >= config.maxQueueSize {
+        if persistentQueue.count >= config.maxQueueSize {
             perceptLog("Queue is full, dropping oldest event")
-            fileQueue.delete(index: 0)
+            persistentQueue.remove(at: 0)
         }
 
         var data: Data?
@@ -215,8 +108,8 @@ class PerceptEventQueue {
             return
         }
 
-        fileQueue.add(data!)
-        perceptLog("Queued event '\(event.name)'. Depth: \(fileQueue.depth)")
+        persistentQueue.add(data!)
+        perceptLog("Queued event '\(event.name)'. Depth: \(persistentQueue.count)")
         flushIfOverThreshold()
     }
     
@@ -229,7 +122,7 @@ class PerceptEventQueue {
                 self.isFlushing = true
             }
 
-            let items = self.fileQueue.getFiles(count)
+            let items = self.persistentQueue.getEvents(count)
 
             var eventsToSend = [PerceptEvent]()
             let decoder = JSONDecoder()
@@ -243,7 +136,7 @@ class PerceptEventQueue {
 
             completion(PerceptEventConsumerPayload(events: eventsToSend) { success in
                 if success, items.count > 0 {
-                    self.fileQueue.pop(items.count)
+                    self.persistentQueue.pop(items.count)
                 }
 
                 self.isFlushingLock.withLock {
@@ -279,7 +172,7 @@ class PerceptEventQueue {
 
     
     private func flushIfOverThreshold() {
-        if fileQueue.depth >= config.flushAt {
+        if persistentQueue.count >= config.flushAt {
             flush()
         }
     }

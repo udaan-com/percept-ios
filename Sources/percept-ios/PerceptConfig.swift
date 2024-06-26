@@ -12,7 +12,7 @@ public struct PerceptConfig {
     public var flushAt = 20
     public var maxQueueSize = 1000
     public var maxBatchSize = 50
-    public var flushIntervalSeconds: Double = 10
+    public var flushIntervalSeconds: Double = 20
     public var captureAppLifecycleEvents = true
     public var debug = true
     

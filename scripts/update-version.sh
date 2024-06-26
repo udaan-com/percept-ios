@@ -17,7 +17,6 @@ cd $SCRIPT_DIR/..
 
 NEW_VERSION="$1"
 
-# Replace `postHogVersion` with the given version
 sed -i '' "s/perceptSdkVersion = \".*\"/perceptSdkVersion = \"$NEW_VERSION\"/" Sources/percept-ios/internal/Version.swift
 echo "Updated perceptSdkVersion to '$NEW_VERSION' in Version.swift"
 
