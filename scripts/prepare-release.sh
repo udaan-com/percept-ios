@@ -18,7 +18,7 @@ cd $SCRIPT_DIR/..
 NEW_VERSION="$1"
 
 # bump version
-./scripts/bump-version.sh $NEW_VERSION
+./scripts/update-version.sh $NEW_VERSION
 
 # commit changes
 ./scripts/commit-code.sh
