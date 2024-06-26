@@ -197,7 +197,7 @@ class PerceptEventQueue {
         }
 
         if pausedUntil != nil, pausedUntil! > Date() {
-            perceptLog("Flushing is paused till `\(pausedUntil)`")
+            perceptLog("Flushing is paused till `\(pausedUntil as Optional)`")
             return false
         }
 
