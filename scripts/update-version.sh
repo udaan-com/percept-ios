@@ -1,8 +1,8 @@
 
 #!/bin/bash
 
-# ./scripts/bump-version.sh <new version>
-# eg ./scripts/bump-version.sh "1.0.0"
+# ./scripts/update-version.sh <new version>
+# eg ./scripts/update-version.sh "1.0.0"
 
 set -eux
 
@@ -18,9 +18,9 @@ cd $SCRIPT_DIR/..
 NEW_VERSION="$1"
 
 # Replace `postHogVersion` with the given version
-perl -pi -e "s/perceptSdkVersion = \".*\"/perceptSdkVersion = \"$NEW_VERSION\"/" Sources/percept-ios/internal/Version.swift
+sed -i '' "s/perceptSdkVersion = \".*\"/perceptSdkVersion = \"$NEW_VERSION\"/" Sources/percept-ios/internal/Version.swift
 echo "Updated perceptSdkVersion to '$NEW_VERSION' in Version.swift"
 
 # Replace `s.version` with the given version
-perl -pi -e "s/s\.version          = \".*\"/s\.version          = \"$NEW_VERSION\"/" Percept.podspec
-echo "Updated s.version to '$NEW_VERSION' in $PODSPEC_FILE"
+sed -i '' "s/s\.version          = \'.*\'/s\.version          = \'$NEW_VERSION\'/" Percept.podspec
+echo "Updated s.version to '$NEW_VERSION' in Percept.podspec"
