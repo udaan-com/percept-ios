@@ -2,7 +2,23 @@
 
 ## Setup
 
-Pending
+### Using SPM
+
+Add Percept as a dependency in your Package.swift file
+
+```swift
+dependencies: [
+  .package(url: "https://github.com/udaan-com/percept-ios.git", from: "1.0.0")
+],
+```
+
+### Using CocoaPods
+
+Add it to your podfile
+
+```
+pod "Percept", "~> 1.0.0"
+```
 
 ## Usage
 
