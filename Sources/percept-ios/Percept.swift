@@ -6,10 +6,8 @@
 //
 
 import Foundation
-#if os(iOS) || os(tvOS)
+#if os(iOS)
     import UIKit
-#elseif os(macOS)
-    import AppKit
 #endif
 
 public enum PerceptUserProperty: String {
@@ -283,21 +281,17 @@ public final class Percept: NSObject {
     private func removeAppStateListeners() {
         let defaultCenter = NotificationCenter.default
 
-        #if os(iOS) || os(tvOS)
+        #if os(iOS)
             defaultCenter.removeObserver(self, name: UIApplication.didFinishLaunchingNotification, object: nil)
             defaultCenter.removeObserver(self, name: UIApplication.didEnterBackgroundNotification, object: nil)
             defaultCenter.removeObserver(self, name: UIApplication.didBecomeActiveNotification, object: nil)
-        #elseif os(macOS)
-            defaultCenter.removeObserver(self, name: NSApplication.didFinishLaunchingNotification, object: nil)
-            defaultCenter.removeObserver(self, name: NSApplication.didResignActiveNotification, object: nil)
-            defaultCenter.removeObserver(self, name: NSApplication.didBecomeActiveNotification, object: nil)
         #endif
     }
     
     private func addAppStateListeners() {
         let defaultCenter = NotificationCenter.default
         
-        #if os(iOS) || os(tvOS)
+        #if os(iOS)
           defaultCenter.addObserver(self,
                                     selector: #selector(handleAppDidFinishLaunching),
                                     name: UIApplication.didFinishLaunchingNotification,
@@ -310,19 +304,6 @@ public final class Percept: NSObject {
                                     selector: #selector(handleAppDidBecomeActive),
                                     name: UIApplication.didBecomeActiveNotification,
                                     object: nil)
-        #elseif os(macOS)
-        defaultCenter.addObserver(self,
-                                  selector: #selector(handleAppDidFinishLaunching),
-                                  name: NSApplication.didFinishLaunchingNotification,
-                                  object: nil)
-        defaultCenter.addObserver(self,
-                                  selector: #selector(handleAppDidEnterBackground),
-                                  name: NSApplication.didResignActiveNotification,
-                                  object: nil)
-        defaultCenter.addObserver(self,
-                                  selector: #selector(handleAppDidBecomeActive),
-                                  name: NSApplication.didBecomeActiveNotification,
-                                  object: nil)
         #endif
       }
     
@@ -434,7 +415,7 @@ public final class Percept: NSObject {
         }
         deviceInfo?["pi_device_manufacturer"] = "Apple"
         
-        #if os(iOS) || os(tvOS)
+        #if os(iOS)
             let device = UIDevice.current
             deviceInfo?["pi_device_name"] = device.model
             deviceInfo?["pi_os_name"] = device.systemName
@@ -442,16 +423,6 @@ public final class Percept: NSObject {
             
             deviceInfo?["pi_sdk_type"] = perceptSdkName;
             deviceInfo?["pi_sdk_version"] = perceptSdkVersion;
-        #elseif os(macOS)
-            let deviceName = Host.current().localizedName
-            if (deviceName?.isEmpty) != nil {
-                deviceInfo?["pi_device_name"] = deviceName
-            }
-            let processInfo = ProcessInfo.processInfo
-            deviceInfo?["pi_os_name"] = "macOS \(processInfo.operatingSystemVersionString)"
-            let osVersion = processInfo.operatingSystemVersion
-            deviceInfo?["pi_os_version"] = "\(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)"
-            deviceInfo?["pi_device_type"] = "Desktop"
         #endif
     }
     

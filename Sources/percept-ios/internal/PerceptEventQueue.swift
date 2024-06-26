@@ -37,7 +37,7 @@ class FileBackedQueue {
         }
     }
     
-    func peek(_ count: Int) -> [Data] {
+    func getFiles(_ count: Int) -> [Data] {
         loadFiles(count)
     }
 
@@ -166,9 +166,9 @@ class PerceptEventQueue {
             return
         }
 
-        take(config.maxBatchSize) { payload in
+        process(config.maxBatchSize) { payload in
             if !payload.events.isEmpty {
-                self.eventHandler(payload)
+                self.sendBatchedEvents(payload)
             } else {
                 // there's nothing to be sent
                 payload.completion(true)
@@ -204,7 +204,6 @@ class PerceptEventQueue {
     func add(_ event: PerceptEvent) {
         if fileQueue.depth >= config.maxQueueSize {
             perceptLog("Queue is full, dropping oldest event")
-            // first is always oldest
             fileQueue.delete(index: 0)
         }
 
@@ -221,7 +220,7 @@ class PerceptEventQueue {
         flushIfOverThreshold()
     }
     
-    private func take(_ count: Int, completion: @escaping (PerceptEventConsumerPayload) -> Void) {
+    private func process(_ count: Int, completion: @escaping (PerceptEventConsumerPayload) -> Void) {
         dispatchQueue.async {
             self.isFlushingLock.withLock {
                 if self.isFlushing {
@@ -230,19 +229,19 @@ class PerceptEventQueue {
                 self.isFlushing = true
             }
 
-            let items = self.fileQueue.peek(count)
+            let items = self.fileQueue.getFiles(count)
 
-            var processing = [PerceptEvent]()
+            var eventsToSend = [PerceptEvent]()
             let decoder = JSONDecoder()
             
             for item in items {
                 guard let event = try? decoder.decode(PerceptEvent.self, from: item) else {
                     continue
                 }
-                processing.append(event)
+                eventsToSend.append(event)
             }
 
-            completion(PerceptEventConsumerPayload(events: processing) { success in
+            completion(PerceptEventConsumerPayload(events: eventsToSend) { success in
                 if success, items.count > 0 {
                     self.fileQueue.pop(items.count)
                     perceptLog("Completed!")
@@ -255,7 +254,7 @@ class PerceptEventQueue {
         }
     }
     
-    private func eventHandler(_ payload: PerceptEventConsumerPayload) {
+    private func sendBatchedEvents(_ payload: PerceptEventConsumerPayload) {
         perceptLog("Sending batch of \(payload.events.count) events to Percept")
         
         api.sendEvents(events: payload.events) { success in
@@ -296,12 +295,10 @@ class PerceptEventQueue {
         }
 
         if paused {
-            // We don't flush data if the queue is paused
             return false
         }
 
         if pausedUntil != nil, pausedUntil! > Date() {
-            // We don't flush data if the queue is temporarily paused
             return false
         }
 
