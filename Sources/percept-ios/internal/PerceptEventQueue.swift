@@ -76,6 +76,13 @@ class PerceptEventQueue {
            }
        }
 
+        reachability?.whenReachable = { _ in
+            self.pausedLock.withLock {
+                perceptLog("Back in network. Queue can process now")
+                self.paused = false
+            }
+        }
+
         do {
             try reachability?.startNotifier()
         } catch {
@@ -84,7 +91,7 @@ class PerceptEventQueue {
 
         timerLock.withLock {
             timer = Timer.scheduledTimer(withTimeInterval: config.flushIntervalSeconds, repeats: true, block: { _ in
-                perceptLog("Inside timer: \(self.isFlushing)")
+                perceptLog("Inside timer")
                 if !self.isFlushing {
                     perceptLog("Inside timer flushing now")
                     self.flush()
@@ -185,10 +192,12 @@ class PerceptEventQueue {
         }
 
         if paused {
+            perceptLog("Flushing is paused because of no network")
             return false
         }
 
         if pausedUntil != nil, pausedUntil! > Date() {
+            perceptLog("Flushing is paused till `\(pausedUntil)`")
             return false
         }
 
